@@ -19,8 +19,7 @@ from tg_bot.modules.helper_funcs.misc import paginate_modules
 
 PM_START_TEXT = """
 
-Hello {}, Hello, My name is {}. I am a Software Engineer from Iowa. I don't have my to say about my past because I am a very private person.! 
-
+Hello {}, My name is {}. I am a Software Engineer from Iowa. I don't have my to say about my past because I am a very private person.! 
 This bot is exclusively made for...... ,well you know the rest anyway 
 """
 
@@ -40,11 +39,7 @@ the things I can help you with.
 And the following:
 """.format(dispatcher.bot.first_name, "" if not ALLOW_EXCL else "\nAll commands can either be used with / or !.\n")
 
-DONATE_STRING = """Heya, glad to hear you want to donate!
-It took lots of work for [my creator](t.me/SonOfLars) to get me to where I am now, and every donation helps \
-motivate him to make me even better. All the donation money will go to a better VPS to host me, and/or beer \
-(see his bio!). He's just a poor student, so every little helps!
-There are two ways of paying him; [PayPal](paypal.me/PaulSonOfLars), or [Monzo](monzo.me/paulnionvestergaardlarsen)."""
+DONATE_STRING = """Just social service !"""
 
 IMPORTED = {}
 MIGRATEABLE = []
