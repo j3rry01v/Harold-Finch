@@ -19,21 +19,9 @@ from tg_bot.modules.helper_funcs.misc import paginate_modules
 
 PM_START_TEXT = """
 
-ഹായ് {}, എന്റെ പേര് {}! ഞാൻ [ഇദ്ദേഹം](tg://user?id={}) നോക്കി നടത്തുന്ന ഒരു അടിപൊളി അഡ്മിൻ ബോട്ടാണ്.
+Hello {}, Hello, My name is {}. I am a Software Engineer from Iowa. I don't have my to say about my past because I am a very private person.! 
 
-എന്നെ fkjangaga
-
-g;fadjkgg
-fgnkdfg
-;flgfdgj
-
-
-gdfsjgllf
-
-djglksl;gl
-
-ലഭ്യമായ കമാന്റുകളെപ്പറ്റി അറിയുവാൻ /help അമർത്തുക.
-
+This bot is exclusively made for...... ,well you know the rest anyway 
 """
 
 HELP_STRINGS = """
