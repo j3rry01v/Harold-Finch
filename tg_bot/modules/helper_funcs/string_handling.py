@@ -145,6 +145,8 @@ def button_markdown_parser(txt: str, entities: Dict[MessageEntity, str] = None, 
 
 
 def escape_invalid_curly_brackets(text: str, valids: List[str]) -> str:
+    if not text:
+        return text
     new_text = ""
     idx = 0
     while idx < len(text):
@@ -248,6 +250,8 @@ def extract_time(message, time_val):
         elif unit == 'h':
             bantime = int(time.time() + int(time_num) * 60 * 60)
         elif unit == 'd':
+            if int(time_num) > 365:
+                time_num = 365
             bantime = int(time.time() + int(time_num) * 24 * 60 * 60)
         else:
             # how even...?

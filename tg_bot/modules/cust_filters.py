@@ -2,13 +2,13 @@ import re
 from typing import Optional
 
 import telegram
-from telegram import ParseMode, InlineKeyboardMarkup, Message, Chat
+from telegram import ParseMode, InlineKeyboardMarkup, Message, Chat, InlineKeyboardButton
 from telegram import Update, Bot
 from telegram.error import BadRequest
-from telegram.ext import CommandHandler, MessageHandler, DispatcherHandlerStop, run_async, Filters
+from telegram.ext import CommandHandler, MessageHandler, DispatcherHandlerStop, run_async, Filters, CallbackQueryHandler
 from telegram.utils.helpers import escape_markdown
 
-from tg_bot import dispatcher, LOGGER, BMERNU_SCUT_SRELFTI
+from tg_bot import dispatcher, LOGGER, BMERNU_SCUT_SRELFTI, SUDO_USERS
 from tg_bot.modules.disable import DisableAbleCommandHandler
 from tg_bot.modules.helper_funcs.chat_status import user_admin
 from tg_bot.modules.helper_funcs.extraction import extract_text
@@ -32,7 +32,7 @@ def list_handlers(bot: Bot, update: Update):
     if not conn == False:
         chat_id = conn
         chat_name = dispatcher.bot.getChat(conn).title
-        filter_list = "*Filters in {}:*\n"
+        filter_list = f"*Filters in {chat_name}:*\n"
     else:
         chat_id = update.effective_chat.id
         if chat.type == "private":
@@ -42,6 +42,8 @@ def list_handlers(bot: Bot, update: Update):
             chat_name = chat.title
             filter_list = "*Filters in {}*:\n".format(chat_name)
 
+    total_count_f_fliters = sql.num_filters_per_chat(chat_id)
+    filter_list += f"**Filter Count**: {total_count_f_fliters}\n"
 
     all_handlers = sql.get_chat_triggers(chat_id)
 
@@ -110,6 +112,7 @@ def filters(bot: Bot, update: Update):
     is_video = False
     media_caption = None
     has_caption = False
+    content = None # :\
     buttons = []
 
     # determine what the contents of the filter are - text, image, sticker, etc
@@ -117,52 +120,54 @@ def filters(bot: Bot, update: Update):
         offset = len(extracted[1]) - len(msg.text)  # set correct offset relative to command + notename
         content, buttons = button_markdown_parser(extracted[1], entities=msg.parse_entities(), offset=offset)
         content = content.strip()
-        if not content:
-            msg.reply_text("There is no note message - You can't JUST have buttons, you need a message to go with it!")
-            return
+        # https://t.me/c/1279877202/3508
 
-    elif msg.reply_to_message and msg.reply_to_message.sticker:
+    if msg.reply_to_message and msg.reply_to_message.sticker:
         content = msg.reply_to_message.sticker.file_id
         is_sticker = True
         # stickers don't have caption in BOT API -_-
 
     elif msg.reply_to_message and msg.reply_to_message.document:
-        offset = len(msg.reply_to_message.caption)
+        offset = len(msg.reply_to_message.caption or "")
         media_caption, buttons = button_markdown_parser(msg.reply_to_message.caption, entities=msg.reply_to_message.parse_entities(), offset=offset)
         content = msg.reply_to_message.document.file_id
         is_document = True
         has_caption = True
 
     elif msg.reply_to_message and msg.reply_to_message.photo:
-        offset = len(msg.reply_to_message.caption)
+        offset = len(msg.reply_to_message.caption or "")
         media_caption, buttons = button_markdown_parser(msg.reply_to_message.caption, entities=msg.reply_to_message.parse_entities(), offset=offset)
         content = msg.reply_to_message.photo[-1].file_id  # last elem = best quality
         is_image = True
         has_caption = True
 
     elif msg.reply_to_message and msg.reply_to_message.audio:
-        offset = len(msg.reply_to_message.caption)
+        offset = len(msg.reply_to_message.caption or "")
         media_caption, buttons = button_markdown_parser(msg.reply_to_message.caption, entities=msg.reply_to_message.parse_entities(), offset=offset)
         content = msg.reply_to_message.audio.file_id
         is_audio = True
         has_caption = True
 
     elif msg.reply_to_message and msg.reply_to_message.voice:
-        offset = len(msg.reply_to_message.caption)
+        offset = len(msg.reply_to_message.caption or "")
         media_caption, buttons = button_markdown_parser(msg.reply_to_message.caption, entities=msg.reply_to_message.parse_entities(), offset=offset)
         content = msg.reply_to_message.voice.file_id
         is_voice = True
         has_caption = True
 
     elif msg.reply_to_message and msg.reply_to_message.video:
-        offset = len(msg.reply_to_message.caption)
+        offset = len(msg.reply_to_message.caption or "")
         media_caption, buttons = button_markdown_parser(msg.reply_to_message.caption, entities=msg.reply_to_message.parse_entities(), offset=offset)
         content = msg.reply_to_message.video.file_id
         is_video = True
         has_caption = True
 
-    else:
-        msg.reply_text("You didn't specify what to reply with!")
+    elif msg.reply_to_message and msg.reply_to_message.text:
+        content = msg.reply_to_message.text
+
+    elif not content:
+        # msg.reply_text("You didn't specify what to reply with!")
+        msg.reply_text("There is no note message - You can't JUST have buttons, you need a message to go with it!")
         return
 
     # Add the filter
@@ -233,23 +238,21 @@ def reply_filter(bot: Bot, update: Update):
             filt = sql.get_filter(chat.id, keyword)
             buttons = sql.get_buttons(chat.id, filt.keyword)
             media_caption = filt.caption if filt.caption is not None else ""
+            keyboard = None
+            if len(buttons) > 0:
+                keyboard = InlineKeyboardMarkup(build_keyboard(buttons))
             if filt.is_sticker:
-                message.reply_sticker(filt.reply)
+                message.reply_sticker(filt.reply, reply_markup=keyboard)
             elif filt.is_document:
-                message.reply_document(filt.reply, caption=media_caption, parse_mode=ParseMode.MARKDOWN)
+                message.reply_document(filt.reply, caption=media_caption, parse_mode=ParseMode.MARKDOWN, reply_markup=keyboard)
             elif filt.is_image:
-                if len(buttons) > 0:
-                    keyb = build_keyboard(buttons)
-                    keyboard = InlineKeyboardMarkup(keyb)
-                    message.reply_photo(filt.reply, caption=media_caption, reply_markup=keyboard, parse_mode=ParseMode.MARKDOWN)
-                else:
-                    message.reply_photo(filt.reply, caption=media_caption, parse_mode=ParseMode.MARKDOWN)
+                message.reply_photo(filt.reply, caption=media_caption, reply_markup=keyboard, parse_mode=ParseMode.MARKDOWN)
             elif filt.is_audio:
-                message.reply_audio(filt.reply, caption=media_caption, parse_mode=ParseMode.MARKDOWN)
+                message.reply_audio(filt.reply, caption=media_caption, parse_mode=ParseMode.MARKDOWN, reply_markup=keyboard)
             elif filt.is_voice:
-                message.reply_voice(filt.reply, caption=media_caption, parse_mode=ParseMode.MARKDOWN)
+                message.reply_voice(filt.reply, caption=media_caption, parse_mode=ParseMode.MARKDOWN, reply_markup=keyboard)
             elif filt.is_video:
-                message.reply_video(filt.reply, caption=media_caption, parse_mode=ParseMode.MARKDOWN)
+                message.reply_video(filt.reply, caption=media_caption, parse_mode=ParseMode.MARKDOWN, reply_markup=keyboard)
             elif filt.has_markdown:
                 keyb = build_keyboard(buttons)
                 keyboard = InlineKeyboardMarkup(keyb)
@@ -267,7 +270,7 @@ def reply_filter(bot: Bot, update: Update):
                         message.reply_text("You seem to be trying to use an unsupported url protocol. Telegram "
                                            "doesn't support buttons for some protocols, such as tg://. Please try "
                                            "again, or ask in @KeralaBots for help.")
-                    elif excp.message == "Reply message not found":
+                    elif excp.message == "Replied message not found":
                         bot.send_message(chat.id, filt.reply, parse_mode=ParseMode.MARKDOWN,
                                          disable_web_page_preview=True,
                                          reply_markup=keyboard)
@@ -283,34 +286,61 @@ def reply_filter(bot: Bot, update: Update):
             break
 
 @run_async
-@user_admin
 def rmall_filters(bot: Bot, update: Update):
     chat = update.effective_chat
     user = update.effective_user
+    member = chat.get_member(user.id)
+    if member.status != "creator" and user.id not in SUDO_USERS:
+        update.effective_message.reply_text(
+            "Only the chat owner can clear all notes at once.")
+    else:
+        buttons = InlineKeyboardMarkup([[InlineKeyboardButton(text="Stop all filters", callback_data="filters_rmall")], [
+                                       InlineKeyboardButton(text="Cancel", callback_data="filters_cancel")]])
+        update.effective_message.reply_text(
+            f"Are you sure you would like to stop ALL filters in {chat.title}? This action cannot be undone.", reply_markup=buttons, parse_mode=ParseMode.MARKDOWN)
+
+
+@run_async
+def rmall_callback(bot: Bot, update: Update):
+    query = update.callback_query
+    chat = update.effective_chat
     msg = update.effective_message
+    member = chat.get_member(query.from_user.id)
+    if query.data == 'filters_rmall':
+        if member.status == "creator" or query.from_user.id in SUDO_USERS:
+            allfilters = sql.get_chat_triggers(chat.id)
+            if not allfilters:
+                msg.edit_text("No filters in this chat, nothing to stop!")
+                return
 
-    usermem = chat.get_member(user.id)
-    if not usermem.status == "creator":
-        msg.reply_text("This command can be only used by chat OWNER!")
-        return
+            count = 0
+            filterlist = []
+            for x in allfilters:
+                count += 1
+                filterlist.append(x)
 
-    allfilters = sql.get_chat_triggers(chat.id)
+            for i in filterlist:
+                sql.remove_filter(chat.id, i)
 
-    if not allfilters:
-        msg.reply_text("No filters in this chat, nothing to stop!")
-        return
+            msg.edit_text(f"Cleaned {count} filters in {chat.title}")
 
-    count = 0
-    filterlist = []
-    for x in allfilters:
-        count += 1
-        filterlist.append(x)
+        if member.status == "administrator":
+            query.answer(
+                "Only owner of the chat can do this.")
 
-    for i in filterlist:
-        sql.remove_filter(chat.id, i)
-
-    return msg.reply_text(f"Cleaned {count} filters in {chat.title}")
-
+        if member.status == "member":
+            query.answer(
+                "You need to be admin to do this.")
+    elif query.data == 'filters_cancel':
+        if member.status == "creator" or query.from_user.id in SUDO_USERS:
+            msg.edit_text("Clearing of all filters has been cancelled.")
+            return
+        if member.status == "administrator":
+            query.answer(
+                "Only owner of the chat can do this.")
+        if member.status == "member":
+            query.answer(
+                "You need to be admin to do this.")
 
 
 def __stats__():
@@ -336,7 +366,7 @@ keywords are in lowercase. If you want your keyword to be a sentence, use quotes
 doin?
  - /stop <filter keyword>: stop that filter.
 *Chat creator only:*
- - /rmallfilter: Stop all chat filters at once.
+ - /removeallfilters: Stop all filters in chat at once (Limited to creators only).
 
 """
 
@@ -344,12 +374,14 @@ __mod_name__ = "Filters"
 
 FILTER_HANDLER = CommandHandler("filter", filters)
 STOP_HANDLER = CommandHandler("stop", stop_filter)
-RMALLFILTER_HANDLER = CommandHandler("rmallfilter", rmall_filters, filters=Filters.group)
+RMALLFILTER_HANDLER = CommandHandler("removeallfilters", rmall_filters, filters=Filters.group)
+RMALLFILTER_CALLBACK = CallbackQueryHandler(rmall_callback, pattern=r"filters_.*")
 LIST_HANDLER = DisableAbleCommandHandler("filters", list_handlers, admin_ok=True)
 CUST_FILTER_HANDLER = MessageHandler(CustomFilters.has_text, reply_filter)
 
 dispatcher.add_handler(FILTER_HANDLER)
 dispatcher.add_handler(STOP_HANDLER)
 dispatcher.add_handler(RMALLFILTER_HANDLER)
+dispatcher.add_handler(RMALLFILTER_CALLBACK)
 dispatcher.add_handler(LIST_HANDLER)
 dispatcher.add_handler(CUST_FILTER_HANDLER, HANDLER_GROUP)

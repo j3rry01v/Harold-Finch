@@ -28,7 +28,8 @@ GBAN_ERRORS = {
     "Chat_admin_required",
     "Only the creator of a basic group can kick group administrators",
     "Channel_private",
-    "Not in the chat"
+    "Not in the chat",
+    "User not found"
 }
 
 UNGBAN_ERRORS = {
@@ -41,6 +42,7 @@ UNGBAN_ERRORS = {
     "Channel_private",
     "Chat_admin_required",
     "Peer_id_invalid",
+    "User not found"
 }
 
 
@@ -94,8 +96,8 @@ def gban(bot: Bot, update: Update, args: List[str]):
                      "\n<b>ID:</b> <code>{}</code>" \
                      "\n<b>Previous Reason:</b> {}" \
                      "\n<b>Amended Reason:</b> {}".format(mention_html(banner.id, banner.first_name),
-                                              mention_html(user_chat.id, user_chat.first_name or "Deleted Account"),  
-                                                           user_chat.id, old_reason, new_reason), 
+                                              mention_html(user_chat.id, user_chat.first_name or "Deleted Account"),
+                                                           user_chat.id, old_reason, reason),
                     html=True)
 
             message.reply_text("This user is already gbanned, for the following reason:\n"
@@ -111,15 +113,15 @@ def gban(bot: Bot, update: Update, args: List[str]):
                      "\n<b>Admin:</b> {}" \
                      "\n<b>User:</b> {}" \
                      "\n<b>ID:</b> <code>{}</code>" \
-                     "\n<b>New Reason:</b> {}".format(mention_html(banner.id, banner.first_name or "Deleted Account"), 
-                                              mention_html(user_chat.id, user_chat.first_name), 
-                                                           user_chat.id, new_reason), 
+                     "\n<b>New Reason:</b> {}".format(mention_html(banner.id, banner.first_name or "Deleted Account"),
+                                              mention_html(user_chat.id, user_chat.first_name),
+                                                           user_chat.id, reason),
                     html=True)
             message.reply_text("This user is already gbanned, but had no reason set; I've gone and updated it!")
 
         return
 
-    starting = "Initiating global ban for {}...".format(mention_html(user_chat.id, user_chat.first_name or "Deleted Account"))
+    starting = "Global Ban initiated for: \nUser: {}\nReason: {}".format(mention_html(user_chat.id, user_chat.first_name or "Deleted Account"), reason)
     keyboard = []
     message.reply_text(starting, reply_markup=keyboard, parse_mode=ParseMode.HTML)
 
@@ -159,7 +161,7 @@ def gban(bot: Bot, update: Update, args: List[str]):
         except TelegramError:
             pass
 
-    gban_complete="{} has been successfully gbanned :)".format(mention_html(user_chat.id, user_chat.first_name or "Deleted Account"))
+    gban_complete="{} has been successfully gbanned :)\nReason: {}".format(mention_html(user_chat.id, user_chat.first_name or "Deleted Account"), reason)
     keyboard = []
     send_to_list(bot, SUDO_USERS + SUPPORT_USERS,
                    "{} has been successfully gbanned :)".format(mention_html(user_chat.id, user_chat.first_name or "Deleted Account")),
