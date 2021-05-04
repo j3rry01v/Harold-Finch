@@ -153,7 +153,7 @@ def start(bot: Bot, update: Update, args: List[str]):
                 PM_START_TEXT.format(escape_markdown(first_name), escape_markdown(bot.first_name), OWNER_ID),
 
                 parse_mode=ParseMode.MARKDOWN, reply_markup=InlineKeyboardMarkup(
-                    [[InlineKeyboardButton(text="My Creator 👨🏽.", url="https://t.me/j3rry01")),  InlineKeyboardButton(text="📄 Source Code", url="https://github.com/j3rry01v/Harold-Finch")],
+                    [[InlineKeyboardButton(text="My Creator 👨🏽.", url="https://t.me/j3rry01"),  InlineKeyboardButton(text="📄 Source Code", url="https://github.com/j3rry01v/Harold-Finch")],
                      [InlineKeyboardButton(text="Language ", url="https://www.python.org/download/releases/3.0/"), InlineKeyboardButton(text="🔔 Files Bot", url="t.me/mcafilebot")],
                      [InlineKeyboardButton(text="KTU Notes 📚", url="https://www.ktunotes.in/ktu-mca-syllabus/"), InlineKeyboardButton(text="🛠 Error ? ⚠️", url="https://t.me/{}?start=help".format(bot.username)) ]]))
 
