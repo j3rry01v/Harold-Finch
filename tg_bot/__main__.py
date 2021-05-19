@@ -137,8 +137,8 @@ def start(bot: Bot, update: Update, args: List[str]):
 
                 parse_mode=ParseMode.MARKDOWN, reply_markup=InlineKeyboardMarkup(
                     [[InlineKeyboardButton(text="My Creator 👨🏽.", url="https://t.me/j3rry01"),  InlineKeyboardButton(text="📄 Source Code", url="https://github.com/j3rry01v/Harold-Finch")],
-                     [InlineKeyboardButton(text="Language ", url="https://www.python.org/download/releases/3.0/"), InlineKeyboardButton(text="🔔 Files Bot", url="t.me/mcafilebot")],
-                     [InlineKeyboardButton(text="KTU Notes 📚", url="https://www.ktunotes.in/ktu-mca-syllabus/"), InlineKeyboardButton(text="🛠 Error ? ⚠️", url="https://t.me/{}?start=help".format(bot.username)) ]]))
+                     [InlineKeyboardButton(text="Language ", url="https://www.python.org/download/releases/3.0/"), InlineKeyboardButton(text="🔔 File Rename Bot", url="t.me/cev_rename_bot")],
+                     [InlineKeyboardButton(text="KTU Notes 📚", url="https://www.ktunotes.in/ktu-mca-syllabus/"), InlineKeyboardButton(text="🛠 Feedback & Suggestions", url="https://t.me/j3rry01") ]]))
 
     else:
         update.effective_message.reply_text("ചത്തിട്ടില്ലാ...")
