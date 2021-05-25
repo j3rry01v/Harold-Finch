@@ -141,7 +141,7 @@ def start(bot: Bot, update: Update, args: List[str]):
 
                 parse_mode=ParseMode.MARKDOWN, reply_markup=InlineKeyboardMarkup(
                     [[InlineKeyboardButton(text="My Creator 👨🏽.", url="https://t.me/j3rry01"),  InlineKeyboardButton(text="📄 Source Code", url="https://github.com/j3rry01v/Harold-Finch")]
-                      [InlineKeyboardButton(text="🔔 File Rename Bot", url="t.me/cev_rename_bot")],
+                      [InlineKeyboardButton(text="🔔 File Rename Bot", url="t.me/cev_rename_bot")]
                     ]))
 
     else:
