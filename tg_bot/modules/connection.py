@@ -27,7 +27,7 @@ def allow_connections(bot: Bot, update: Update, args: List[str]) -> str:
             print(var)
             if (var == "no"):
                 sql.set_allow_connect_to_chat(chat.id, False)
-                update.effective_message.reply_text("Disabled connections to this chat for users")
+                update.effective_message.reply_text("Disabled connections to this . chat for users")
             elif(var == "yes"):
                 sql.set_allow_connect_to_chat(chat.id, True)
                 update.effective_message.reply_text("Enabled connections to this chat for users")
