@@ -139,10 +139,13 @@ def start(bot: Bot, update: Update, args: List[str]):
                 PM_START_TEXT.format(escape_markdown(
                     first_name), escape_markdown(bot.first_name), OWNER_ID),
 
-                parse_mode=ParseMode.MARKDOWN, reply_markup=InlineKeyboardMarkup(
-                    [[InlineKeyboardButton(text="My Creator 👨🏽.", url="https://t.me/j3rry01"),  InlineKeyboardButton(text="📄 Source Code", url="https://github.com/j3rry01v/Harold-Finch")]
+                parse_mode=ParseMode.MARKDOWN, reply_markup=InlineKeyboardMarkup
+                (
+                    [
+                        [InlineKeyboardButton(text="My Creator 👨🏽.", url="https://t.me/j3rry01"),InlineKeyboardButton(text="📄 Source Code", url="https://github.com/j3rry01v/Harold-Finch"),],
                       [InlineKeyboardButton(text="🔔 File Rename Bot", url="t.me/cev_rename_bot")]
-                    ]))
+                    ]
+                    ))
 
     else:
         update.effective_message.reply_text("ചത്തിട്ടില്ലാ...")
